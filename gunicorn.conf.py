@@ -1,5 +1,5 @@
 import os
-NUM_DEVICES = 2
+NUM_DEVICES = 1
 USED_DEVICES = set()
 
 os.environ["LLAVA_PARAMS_PATH"] = "../llava-weights"
@@ -20,7 +20,7 @@ def child_exit(server, worker):
     USED_DEVICES.remove(worker.device_id)
 
 # Gunicorn Configuration
-bind = "127.0.0.1:8085"
+bind = "127.0.0.1:6085"
 workers = NUM_DEVICES
 worker_class = "sync"
 timeout = 120

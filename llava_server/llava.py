@@ -6,8 +6,12 @@ import numpy as np
 from llava.utils import disable_torch_init
 from transformers import CLIPImageProcessor
 from PIL import Image
+
 from llava.conversation import simple_conv_multimodal
 
+from llava.model.builder import load_pretrained_model
+from llava.mm_utils import get_model_name_from_path
+from llava.eval.run_llava import eval_model
 
 DEFAULT_IMAGE_TOKEN = "<image>"
 DEFAULT_IMAGE_PATCH_TOKEN = "<im_patch>"
@@ -22,11 +26,18 @@ def load_llava(params_path):
     # load model
     disable_torch_init()
     tokenizer = AutoTokenizer.from_pretrained(params_path)
-    model = AutoModelForCausalLM.from_pretrained(
-        params_path, torch_dtype=torch.float16
-    ).cuda()
+    model_path = "liuhaotian/llava-v1.6-vicuna-13b"
+
+    tokenizer, model, image_processor, context_len = load_pretrained_model(
+                    model_path=model_path,
+                    model_base=None,
+                    model_name=get_model_name_from_path(model_path)
+                    )
+    #model = AutoModelForCausalLM.from_pretrained(
+    #    params_path, torch_dtype=torch.float16
+    #).cuda()
     image_processor = CLIPImageProcessor.from_pretrained(
-        model.config.mm_vision_tower, torch_dtype=torch.float16
+        model.config.mm_vision_tower, torch_dtype=torch.float32
     )
 
     mm_use_im_start_end = getattr(model.config, "mm_use_im_start_end", False)
@@ -36,8 +47,8 @@ def load_llava(params_path):
             [DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN], special_tokens=True
         )
 
-    vision_tower = model.model.vision_tower[0]
-    vision_tower.to(device="cuda", dtype=torch.float16)
+    vision_tower = model.model.vision_tower#[0]
+    vision_tower.to(device="cuda", dtype=torch.float32)
     vision_config = vision_tower.config
     vision_config.im_patch_token = tokenizer.convert_tokens_to_ids(
         [DEFAULT_IMAGE_PATCH_TOKEN]
@@ -75,7 +86,7 @@ def load_llava(params_path):
 
         # preprocess images
         images = image_processor(images, return_tensors="pt")["pixel_values"]
-        images = images.to("cuda", dtype=torch.float16)
+        images = images.to("cuda", dtype=torch.float32)
 
         # first, get the activations for the image tokens
         initial_prompts = [PROMPT + image_tokens + " " for _ in range(len(images))]

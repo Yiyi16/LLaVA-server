@@ -40,6 +40,8 @@ def f(_):
         response = requests.post(url, data=data_bytes)
 
         # Print the response from the server
+        print(response.content)
+        print(ss)
         response_data = pickle.loads(response.content)
 
         for output, score in zip(response_data["outputs"], response_data["recall"]):

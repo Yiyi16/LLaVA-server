@@ -13,7 +13,9 @@ root = Blueprint("root", __name__)
 
 def create_app():
     global INFERENCE_FN, BERTSCORE_FN
-    INFERENCE_FN = load_llava(os.environ["LLAVA_PARAMS_PATH"])
+    param_path = 'liuhaotian/llava-v1.6-vicuna-13b'
+    #INFERENCE_FN = load_llava(os.environ["LLAVA_PARAMS_PATH"])
+    INFERENCE_FN = load_llava(param_path)
     BERTSCORE_FN = load_bertscore()
 
     app = Flask(__name__)
